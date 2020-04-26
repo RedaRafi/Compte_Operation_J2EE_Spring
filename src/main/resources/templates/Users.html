@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+	layout:decorator="template1">
+<head>
+<meta charset="utf-8" />
+<title>Banque</title>
+<script type="text/javascript">
+	$(document).on(
+			"click",
+			".open-Dialog",
+			function() {
+				var string = $(this).data('id');
+				var array = string.split("##");
+				$(".usernameEdit").val(array[0]);
+				$(".usernameEditLabel").html("Username : " + array[0]);
+
+				if (array[1] == 1) {
+					array[1] = "ADMIN";
+				} else {
+					array[1] = "USER";
+				}
+				$("#roleCreate").val(array[1]);
+				$("#roleEdit").val(array[1]);
+				$('a[data-toggle="roleCreate"]').not(
+						'[data-title="' + array[1] + '"]')
+						.removeClass('active').addClass('notActive');
+				$('a[data-toggle="roleCreate"][data-title="' + array[1] + '"]')
+						.removeClass('notActive').addClass('active');
+
+			});
+</script>
+<script type="text/javascript">
+	$(document).on(
+			"click",
+			".radioBtn a",
+			function() {
+				var sel = $(this).data('title');
+				var tog = $(this).data('toggle');
+				$("#roleCreate").val(sel);
+				$("#roleEdit").val(sel);
+
+				$('a[data-toggle="' + tog + '"]').not(
+						'[data-title="' + sel + '"]').removeClass('active')
+						.addClass('notActive');
+				$('a[data-toggle="' + tog + '"][data-title="' + sel + '"]')
+						.removeClass('notActive').addClass('active');
+			});
+	$(function() {
+		$('#login-form-link').click(function(e) {
+			$("#login-form").delay(100).fadeIn(100);
+			$("#register-form").fadeOut(100);
+			$('#register-form-link').removeClass('active');
+			$(this).addClass('active');
+			e.preventDefault();
+		});
+		$('#register-form-link').click(function(e) {
+			$("#register-form").delay(100).fadeIn(100);
+			$("#login-form").fadeOut(100);
+			$('#login-form-link').removeClass('active');
+			$(this).addClass('active');
+			e.preventDefault();
+		});
+
+	});
+</script>
+</head>
+<body>
+	<div layout:fragment="content">
+		<div class="col-md-10 col-md-offset-1">
+			<div align="right" sec:authorize="hasRole('ROLE_ADMIN')">
+				<button type="button" class="btn btn-success" data-toggle="modal"
+					data-target="#createUser">
+					<i class="fa fa-plus"></i> add User
+				</button>
+			</div>
+			<div class="panel panel-success">
+				<div class="panel-heading">Liste Des Utilisateurs</div>
+				<div class="panel-body">
+					<div class="text-danger">
+						<label th:text="${msg}"></label>
+					</div>
+					<div class="text-danger">
+						<label th:text="${erreur}"></label>
+					</div>
+				</div>
+				<div class="panel-body">
+					<table class="table">
+						<tr>
+							<th>Login</th>
+							<th>Role</th>
+							<th>Etat</th>
+							<th></th>
+						</tr>
+						<tr th:each="u:${users}">
+							<td th:text="${u.username}"></td>
+							<td th:text="${u.role == 1 ? 'Administrateur' : 'Employe'}"></td>
+							<td th:text="${u.active == 1 ? 'Active' : 'Blocké'}"></td>
+							<td><a sec:authorize="hasRole('ROLE_ADMIN')"
+								class="open-Dialog" data-toggle="modal" data-target="#editeUser"
+								th:attr="data-id=''+${u.username}+'##'+${u.role}"> <i
+									class="fa fa-edit"></i>
+							</a> <a sec:authorize="hasRole('ROLE_ADMIN')"
+								th:href="@{/deleteUser(user=${u.username})}"
+								onclick="return confirm('étes vous sure ?')" class="red"> <i
+									class="fa fa-trash"></i></a> <a
+								sec:authorize="hasRole('ROLE_ADMIN')"
+								onclick="return confirm('étes vous sure ?')"
+								th:if="${u.active == 1}"
+								th:href="@{/blockUser(user=${u.username})}" class="orange">
+									<i class="fa fa-lock"></i>
+							</a> <a sec:authorize="hasRole('ROLE_ADMIN')"
+								onclick="return confirm('étes vous sure ?')"
+								th:if="${u.active == 0}"
+								th:href="@{/deBlockUser(user=${u.username})}" class="green">
+									<i class="fa fa-unlock"></i>
+							</a></td>
+						</tr>
+					</table>
+					<div class="scrollmenu" id="style-2">
+						<a
+							th:class="${status.index == actuel ? 'active btn-success' : ''}"
+							th:each="page,status:${pages}"
+							th:href="@{/Users(page=${status.index})}"
+							th:text="${status.index + 1}"></a>
+					</div>
+				</div>
+				<!-- Modal -->
+				<div id="createUser" class="modal fade" role="dialog"
+					sec:authorize="hasRole('ROLE_ADMIN')">
+					<div class="modal-dialog">
+
+						<!-- Modal content-->
+						<div class="modal-content" style="width: 120%">
+							<div class="modal-body">
+								<form action="/saveUser" method="post" class="form-horizontal">
+									<div class="panel panel-success" style="">
+										<div class="panel-heading">
+											Nouveau Utilisateur
+											<button type="button" class="close" data-dismiss="modal">&times;</button>
+										</div>
+										<div class="panel-body">
+											<div class="form-group">
+												<label class="control-label col-sm-3">Username : </label>
+												<div class="col-sm-9">
+													<input type="text" class="form-control" name="user"
+														required="required" />
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="control-label col-sm-3">Password : </label>
+												<div class="col-sm-9">
+													<input type="password" class="form-control" name="p1"
+														required="required" />
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="control-label col-sm-3">Confirm
+													Password : </label>
+												<div class="col-sm-9">
+													<input type="password" class="form-control" name="p2"
+														required="required" />
+												</div>
+											</div>
+											<div class="form-group">
+												<label for="happy"
+													class="col-sm-3 col-md-3 control-label text-right">
+													Role :</label>
+												<div class="col-sm-9 col-md-9">
+													<div class="input-group">
+														<div class="btn-group radioBtn">
+															<a class="btn btn-primary btn-md active"
+																data-toggle="roleCreate" data-title="ADMIN">ADMIN</a> <a
+																class="btn btn-primary btn-md notActive"
+																data-toggle="roleCreate" data-title="USER">USER</a>
+														</div>
+														<input type="hidden" name="role" id="roleCreate"
+															value="ADMIN" />
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="modal-footer">
+											<button type="submit" class="btn btn-success">Save</button>
+											<button type="button" class="btn btn-danger"
+												data-dismiss="modal">Close</button>
+										</div>
+									</div>
+								</form>
+							</div>
+
+						</div>
+
+					</div>
+				</div>
+				<!-- Modal -->
+				<div id="editeUser" class="modal fade" role="dialog"
+					sec:authorize="hasRole('ROLE_ADMIN')">
+					<div class="modal-dialog">
+
+						<!-- Modal content-->
+						<div class="modal-content" style="width: 120%">
+							<div class="modal-body">
+								<div class="panel panel-login">
+									<div class="panel-heading">
+										<div class="row">
+											<div class="col-xs-6">
+												<a href="#" class="active" id="login-form-link">Modifier
+													Mot de passe</a>
+											</div>
+											<div class="col-xs-6">
+												<a href="#" id="register-form-link">Changer le Role</a>
+											</div>
+										</div>
+										<hr />
+									</div>
+									<div class="panel-body">
+										<div class="row">
+											<div class="col-lg-12">
+												<form id="login-form" action="/changeUserPass" method="post"
+													role="form" style="display: block;">
+													<div class="form-group">
+														<input type="hidden" name="user" tabindex="1"
+															class="form-control usernameEdit" placeholder="username" />
+														<label class="form-control usernameEditLabel"></label>
+													</div>
+													<div class="form-group">
+														<input type="password" name="p" tabindex="2"
+															class="form-control" placeholder="Ancien Password" />
+													</div>
+													<div class="form-group">
+														<input type="password" name="p1" tabindex="2"
+															class="form-control" placeholder="Nouveau Password" />
+													</div>
+													<div class="form-group">
+														<input type="password" name="p2" tabindex="2"
+															class="form-control" placeholder="Confirmer Password" />
+													</div>
+													<div class="form-group">
+														<div class="row">
+															<div class="col-sm-6 col-sm-offset-3">
+																<input type="submit" name="login-submit"
+																	id="login-submit" tabindex="4"
+																	onclick="return confirm('étes vous sure ?')"
+																	class="form-control btn btn-login" value="Valider" />
+															</div>
+														</div>
+													</div>
+												</form>
+												<form id="register-form" action="/changeUserRole"
+													method="post" style="display: none;">
+													<div class="form-group">
+														<input type="hidden" name="user" tabindex="1"
+															class="form-control usernameEdit" /> <label
+															class="form-control usernameEditLabel"></label>
+													</div>
+													<div class="input-group">
+														<div class="btn-group radioBtn">
+															<a class="btn btn-primary btn-md active"
+																data-toggle="roleCreate" data-title="ADMIN">ADMIN</a> <a
+																class="btn btn-primary btn-md notActive"
+																data-toggle="roleCreate" data-title="USER">USER</a>
+														</div>
+														<input type="hidden" name="role" id="roleEdit"
+															value="ADMIN" />
+													</div>
+													<div class="form-group">
+														<div class="row">
+															<div class="col-sm-6 col-sm-offset-3">
+																<input type="submit" id="register-submit" tabindex="4"
+																	onclick="return confirm('étes vous sure ?')"
+																	class="form-control btn btn-register" value="Valider" />
+															</div>
+														</div>
+													</div>
+												</form>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-danger"
+									data-dismiss="modal">Close</button>
+							</div>
+
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>

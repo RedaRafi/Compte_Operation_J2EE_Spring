@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+	layout:decorator="template1">
+<head>
+<meta charset="utf-8" />
+<title>Banque</title>
+<script type="text/javascript">
+	$(document).on("click", ".open-Dialog", function() {
+		var string = $(this).data('id');
+		var array = string.split("##");
+		$("#clId").val(array[0]);
+		$("#clNom").val(array[1]);
+		$("#clCin").val(array[2]);
+		$("#clMail").val(array[3]);
+	});
+</script>
+</head>
+<body>
+	<div layout:fragment="content">
+		<div class="col-md-10 col-md-offset-1">
+			<div class="text-success">
+				<label th:text="${msg}"></label>
+			</div>
+			<div align="right" sec:authorize="hasRole('ROLE_ADMIN')">
+				<button type="button" class="btn btn-success" data-toggle="modal"
+					data-target="#createClient">
+					<i class="fa fa-plus"></i> add Client
+				</button>
+			</div>
+			<div class="panel panel-success">
+				<div class="panel-heading">Liste Des Clients</div>
+				<div class="panel-body">
+					<form th:action="@{/Clients}" method="get">
+						<label>Filter :</label> <input type="text" name="cle"
+							th:value="${cle}" />
+						<button type="submit" class="btn btn-primary">Cherche</button>
+						<label th:value="${test}"></label>
+					</form>
+				</div>
+				<div class="panel-body">
+					<table class="table">
+						<tr>
+							<th>RIB</th>
+							<th>NOM</th>
+							<th>CIN</th>
+							<th>E-Mail</th>
+							<th>Nombre Comptes</th>
+							<th></th>
+						</tr>
+						<tr th:each="c:${clients}">
+							<td th:text="${c.id}"></td>
+							<td th:text="${c.nom}"></td>
+							<td th:text="${c.cin}"></td>
+							<td th:text="${c.email}"></td>
+							<td th:text="${#lists.size(c.comptes)}"></td>
+							<td><a th:href="@{/consulterClient(client=${c.id})}"
+								class="green"> <i class="fa fa-info-circle"></i></a> 
+								<a sec:authorize="hasRole('ROLE_ADMIN')" class="orange open-Dialog"
+								data-toggle="modal" data-target="#editeClient"
+								th:attr="data-id=''+${c.id}+'##'+${c.nom}+'##'+${c.cin}+'##'+${c.email}">
+									<i class="fa fa-edit"></i>
+							</a>
+							<a sec:authorize="hasRole('ROLE_ADMIN')" onclick="return confirm('étes vous sure ?')"
+								th:href="@{/deleteClient(c=${c.id})}" class="red"> <i
+									class="fa fa-trash"></i></a>
+							</td>
+						</tr>
+					</table>
+					<div class="scrollmenu" id="style-2">
+						<a
+							th:class="${status.index == actuel ? 'active btn-success' : ''}"
+							th:each="page,status:${pages}"
+							th:href="@{/Clients(page=${status.index})}"
+							th:text="${status.index + 1}"></a>
+					</div>
+				</div>
+				<!-- Modal -->
+				<div id="createClient" class="modal fade" role="dialog"
+					sec:authorize="hasRole('ROLE_ADMIN')">
+					<div class="modal-dialog">
+
+						<!-- Modal content-->
+						<div class="modal-content" style="width: 120%">
+							<div class="modal-body">
+								<form action="/saveClient" method="post" class="form-horizontal">
+									<div class="panel panel-success" style="">
+										<div class="panel-heading">
+											Nouveau Client
+											<button type="button" class="close" data-dismiss="modal">&times;</button>
+										</div>
+										<div class="panel-body">
+											<div class="form-group">
+												<label class="control-label col-sm-2">Nom : </label>
+												<div class="col-sm-10">
+													<input type="text" class="form-control" name="nom" required="required"/>
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="control-label col-sm-2">CIN : </label>
+												<div class="col-sm-10">
+													<input type="text" class="form-control" name="cin" required="required"/>
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="control-label col-sm-2">E-mail : </label>
+												<div class="col-sm-10">
+													<input type="email" class="form-control" name="email" required="required"/>
+												</div>
+											</div>
+											<br />
+										</div>
+										<div class="modal-footer">
+											<button type="submit" class="btn btn-success">Save</button>
+											<button type="button" class="btn btn-danger"
+												data-dismiss="modal">Close</button>
+										</div>
+									</div>
+								</form>
+							</div>
+
+						</div>
+
+					</div>
+				</div>
+				<!-- Modal -->
+				<div id="editeClient" class="modal fade" role="dialog"
+					sec:authorize="hasRole('ROLE_ADMIN')">
+					<div class="modal-dialog">
+
+						<!-- Modal content-->
+						<div class="modal-content" style="width: 120%">
+							<div class="modal-body">
+								<form action="/editClient" method="post" class="form-horizontal">
+									<div class="panel panel-success" style="">
+										<div class="panel-heading">
+											Edit Client
+											<button type="button" class="close" data-dismiss="modal">&times;</button>
+										</div>
+										<div class="panel-body">
+											<input type="hidden" id="clId" name="c" />
+											<div class="form-group">
+												<label class="control-label col-sm-2">Nom : </label>
+												<div class="col-sm-10">
+													<input type="text" id="clNom" class="form-control"
+														name="nom" required="required"/>
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="control-label col-sm-2">CIN : </label>
+												<div class="col-sm-10">
+													<input type="text" id="clCin" class="form-control"
+														name="cin" required="required"/>
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="control-label col-sm-2">E-mail : </label>
+												<div class="col-sm-10">
+													<input type="email" id="clMail" class="form-control"
+														name="email" required="required"/>
+												</div>
+											</div>
+											<br />
+										</div>
+										<div class="modal-footer">
+											<button type="submit" onclick="return confirm('étes vous sure ?')" class="btn btn-success">Save</button>
+											<button type="button" class="btn btn-danger"
+												data-dismiss="modal">Close</button>
+										</div>
+									</div>
+								</form>
+							</div>
+
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>

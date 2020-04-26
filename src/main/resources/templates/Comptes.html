@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+	layout:decorator="template1">
+<head>
+<meta charset="utf-8" />
+<title>Banque</title>
+<script type="text/javascript">
+$(document).on("click", ".open-Dialog", function () {
+    var string = $(this).data('id');
+    console.log(string);
+    $("#codeEdit").val(string[0]);
+    $("#codeEdit1").html(string[0]);
+    $("#soldeEdit").val(string[1]);
+    $("#montantEdit").val(string[2]);
+    var type = string[3];
+    if(type=="CE"){
+    $("#eparRadioEdit").prop("checked",true);
+    document.getElementById('epargneEdit').style.display='block';document.getElementById('courantEdit').style.display='none';
+    $("#courRadioEdit").prop("checked",false);
+    }else{
+    	$("#courRadioEdit").prop("checked",true);
+    	document.getElementById('courantEdit').style.display='block';document.getElementById('epargneEdit').style.display='none';
+    	$("#eparRadioEdit").prop("checked",false);
+    }
+    
+});
+</script>
+</head>
+<body>
+	<div layout:fragment="content">
+		<div class="col-md-6">
+			<div class="panel panel-success">
+				<div class="panel-heading">informations Sur le Client :</div>
+				<div class="panel-body">
+					<form th:action="@{/consulterClient}" method="get"
+						class="form-horizontal">
+						<br />
+						<div class="form-group">
+							<label class="control-label col-sm-3"> Code Client :</label>
+							<div class="col-sm-7">
+								<input type="number" class="form-control" name="client"
+									th:value="${num}" />
+							</div>
+							<button type="submit" class="btn btn-success">Consulter</button>
+						</div>
+					</form>
+					<div class="text-danger">
+						<label th:text="${erreur}"></label>
+					</div>
+					<div class="text-warning">
+						<label th:text="${success}"></label>
+					</div>
+				</div>
+			</div>
+
+			<div class="panel panel-success" th:if="${client}">
+				<div class="panel-heading">Information sur le Client</div>
+				<div class="panel-body">
+					<label>Code : </label> <label th:text="${client.id}"></label><br />
+					<label>Nom : </label> <label th:text="${client.nom}"></label><br />
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-6">
+			<!-- Modal -->
+			<div id="createCompte" class="modal fade" role="dialog" th:if="${client}"
+				sec:authorize="hasRole('ROLE_ADMIN')" >
+				<div class="modal-dialog">
+
+					<!-- Modal content-->
+					<div class="modal-content" style="width: 120%">
+						<div class="modal-body">
+							<form action="/saveCompte" method="post" class="form-horizontal">
+								<div class="panel panel-success" style="">
+									<div class="panel-heading">
+										Nouveau Compte
+										<button type="button" class="close" data-dismiss="modal">&times;</button>
+									</div>
+									<div class="panel-body">
+										<div class="form-group">
+											<label class="control-label col-sm-2">RIB Client : </label>
+											<div class="col-sm-10">
+												<input type="hidden" name="cl"
+														tabindex="1" th:value="${client.id}" />
+												<label th:text="${client.id}" class="form-control"></label>
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="control-label col-sm-2">Code : </label>
+											<div class="col-sm-10">
+												<input type="text" class="form-control" name="code" required="required" />
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="control-label col-sm-2">Solde : </label>
+											<div class="col-sm-10">
+												<input type="text" class="form-control" name="solde" required="required"/>
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="control-label col-sm-2">Type : </label>
+											<div class="col-sm-10">
+												<input type="radio" name="type" value="1" checked="checked"
+													id="courRadio"
+													onchange="document.getElementById('courant').style.display='block';document.getElementById('epargne').style.display='none'" /><label
+													for="courRadio">Compte Courant &nbsp;&nbsp; </label> <input
+													type="radio" name="type" value="2" id="eparRadio"
+													onchange="document.getElementById('epargne').style.display='block';document.getElementById('courant').style.display='none'" /><label
+													for="eparRadio">Compte Epargne </label>
+											</div>
+										</div>
+										<div class="form-group" id="blockMontant">
+											<label class="control-label col-sm-2" id="courant">Taux
+												: </label> <label class="control-label col-sm-2" id="epargne"
+												hidden="true">Decouvert: </label>
+											<div class="col-sm-10">
+												<input type="text" class="form-control" name="montant" required="required"/>
+											</div>
+										</div>
+										<br />
+									</div>
+									<div class="modal-footer">
+										<button type="submit" class="btn btn-success">Save</button>
+										<button type="button" class="btn btn-danger"
+											data-dismiss="modal">Close</button>
+									</div>
+								</div>
+							</form>
+						</div>
+
+					</div>
+
+				</div>
+			</div>
+			<!-- 				FIN MODAL -->
+
+			<!-- Modal EDIT-->
+			<div id="editeCompte" class="modal fade" role="dialog"
+				sec:authorize="hasRole('ROLE_ADMIN')">
+				<div class="modal-dialog">
+
+					<!-- Modal content-->
+					<div class="modal-content" style="width: 120%" th:if="${client}">
+						<div class="modal-body">
+							<form action="/editCompte" method="post" class="form-horizontal">
+								<div class="panel panel-success">
+									<div class="panel-heading">
+										Modifier un Compte
+										<button type="button" class="close" data-dismiss="modal">&times;</button>
+									</div>
+									<div class="panel-body">
+										<div class="form-group">
+											<label class="control-label col-sm-2">Code : </label>
+											<div class="col-sm-10">
+											<label class="form-control" id="codeEdit1"></label>
+												<input id="codeEdit" type="hidden"
+													class="form-control" name="code" />
+												<input type="hidden" name="cl"
+														tabindex="1" th:value="${client.id}" />
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="control-label col-sm-2">Type : </label>
+											<div class="col-sm-10">
+												<input type="radio" name="type" value="1" checked="checked"
+													id="courRadioEdit"
+													onchange="document.getElementById('courantEdit').style.display='block';document.getElementById('epargneEdit').style.display='none'" /><label
+													for="courRadioEdit">Compte Courant &nbsp;&nbsp; </label> <input
+													type="radio" name="type" value="2" id="eparRadioEdit"
+													onchange="document.getElementById('epargneEdit').style.display='block';document.getElementById('courantEdit').style.display='none'" /><label
+													for="eparRadioEdit">Compte Epargne </label>
+											</div>
+										</div>
+										<div class="form-group" id="blockEditMontant">
+											<label class="control-label col-sm-2" id="courantEdit">Taux
+												: </label> <label class="control-label col-sm-2" id="epargneEdit"
+												hidden="true">Decouvert: </label>
+											<div class="col-sm-10">
+												<input type="text" id="montantEdit" class="form-control"
+													name="montant" />
+											</div>
+										</div>
+										<br />
+									</div>
+									<div class="modal-footer">
+										<button type="submit" onclick="return confirm('étes vous sure ?')" class="btn btn-success">Save</button>
+										<button type="button" class="btn btn-danger"
+											data-dismiss="modal">Close</button>
+									</div>
+								</div>
+							</form>
+						</div>
+
+					</div>
+
+				</div>
+			</div>
+			<!-- 				FIN MODAL -->
+			<div align="right" sec:authorize="hasRole('ROLE_ADMIN')" th:if="${client}">
+				<button type="button" class="btn btn-success" data-toggle="modal"
+					data-target="#createCompte">
+					<i class="fa fa-plus"></i> add Compte
+				</button>
+			</div>
+			<div class="panel panel-success" th:if="${client}">
+				<div class="panel-heading">Liste Des Comptes</div>
+				<div class="panel-body">
+					<table class="table">
+						<tr>
+							<th>Numero</th>
+							<th>Type</th>
+							<th>Date de Création</th>
+							<th>Solde</th>
+							<th></th>
+						</tr>
+						<tr th:each="c:${comptes}">
+							<td th:text="${c.id}"></td>
+							<td
+								th:text="${c.class.simpleName == 'CompteCourant' ? 'Courant' : 'Epargne'}"></td>
+							<td th:text="${c.dateCreation}"></td>
+							<td th:text="${c.solde}"></td>
+							<td><a th:href="@{/consulter(compte=${c.id})}" class="green">
+									<i class="fa fa-info-circle"></i>
+							</a><a sec:authorize="hasRole('ROLE_ADMIN')"
+								class="orange open-Dialog" data-toggle="modal"
+								data-target="#editeCompte"
+								th:attr="data-id=''+${c}">
+									<i class="fa fa-edit"></i>
+							</a> <a sec:authorize="hasRole('ROLE_ADMIN')" onclick="return confirm('étes vous sure ?')"
+								th:href="@{/deleteCompte(code=${c.id},compte=${c.client.id},cl=${client.id})}" class="red"> <i
+									class="fa fa-trash"></i></a></td>
+						</tr>
+					</table>
+					<div class="scrollmenu" id="style-2">
+						<a 
+							th:class="${status.index == actuel ? 'active btn-success' : ''}"
+							th:each="page,status:${pages}"
+							th:href="@{/consulterClient(page=${status.index},client=${client.id})}"
+							th:text="${status.index + 1}"></a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

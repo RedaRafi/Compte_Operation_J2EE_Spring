@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+	layout:decorator="template1">
+<head>
+<meta charset="utf-8" />
+<title>Banque</title>
+</head>
+<body>
+	<div layout:fragment="content">
+		<div class="col-md-6">
+			<div class="panel panel-success">
+				<div class="panel-heading">Consultation d'un Compte</div>
+				<div class="panel-body">
+					<form th:action="@{/consulter}" method="get"
+						class="form-horizontal">
+						<br />
+						<div class="form-group">
+							<label class="control-label col-sm-3"> Code Compte :</label>
+							<div class="col-sm-7">
+								<input type="text" class="form-control" name="compte"
+									th:value="${num}" />
+							</div>
+							<button type="submit" class="btn btn-success">Consulter</button>
+						</div>
+					</form>
+					<div class="text-danger">
+						<label th:text="${erreur}"></label>
+					</div>
+				</div>
+			</div>
+
+			<div class="panel panel-success" th:if="${compte}">
+				<div class="panel-heading">Information sur le Compte</div>
+				<div class="panel-body">
+					<label>Client : </label> <label th:text="${compte.client.nom}"></label><br />
+					<label>Code compte : </label> <label th:text="${compte.id}"></label><br />
+					<label>Solde : </label> <label th:text="${compte.solde}"></label> <label>
+						Dh</label><br /> <label>Date de Création : </label> <label
+						th:text="${compte.dateCreation}"></label><br /> <label>Type
+						: </label> <label
+						th:text="${type == 1} ? 'Compte Courant' : 'Compte Epargne'"></label><br />
+					<div th:if="${type == 1}">
+						<label>Découvert : </label> <label th:text="${compte.decouvert}"></label><br />
+					</div>
+					<div th:if="${type == 0}">
+						<label>Taux : </label> <label th:text="${compte.taux}"></label>
+					</div>
+				</div>
+			</div>
+			<div sec:authorize="hasRole('ROLE_ADMIN')">
+				<div class="panel panel-success" th:if="${compte}">
+					<div class="panel-heading">Opérations sur le Compte</div>
+
+					<div class="panel-body">
+						<form action="/saveOperation" method="post"
+							class="form-horizontal">
+							<label>Compte : </label> <input type="hidden"
+								th:value="${compte.id}" name="codeCompte" /> <label
+								th:text="${compte.id}"></label><br /> <br /> <input
+								type="radio" name="oper" value="vers" checked="checked"
+								id="versRadio"
+								onchange="document.getElementById('forVirement').style.display='none'" /><label
+								for="versRadio">Versement &nbsp;&nbsp; </label> <input
+								type="radio" name="oper" value="retr" id="retrRadio"
+								onchange="document.getElementById('forVirement').style.display='none'" /><label
+								for="retrRadio">retrait &nbsp;&nbsp; </label> <input
+								type="radio" name="oper" value="virme" id="virmeRadio"
+								onchange="document.getElementById('forVirement').style.display='block'" /><label
+								for="virmeRadio">virement</label><br /> <br />
+							<div id="forVirement" class="form-group" hidden="true">
+								<label class="control-label col-sm-2">Compte 2 :</label>
+								<div class="col-sm-10">
+									<input type="text" name="codeCompte2" class="form-control"
+										value="" /><br />
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="control-label col-sm-2">Montant :</label>
+								<div class="col-sm-10">
+									<input type="number" class="form-control" name="montant"
+										value="" required="required" />
+								</div>
+							</div>
+							<div class="text-danger" th:if="${erreur2}">
+								<label th:text="${erreur2}"></label>
+							</div>
+							<div class="text-success" th:if="${success}">
+								<label th:text="${success}"></label>
+							</div>
+							<div align="right">
+								<button type="submit" class="btn btn-success">Save</button>
+							</div>
+						</form>
+
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-6">
+
+
+			<div class="panel panel-success" th:if="${compte}">
+				<div class="panel-heading">Liste Des Opérations</div>
+				<div class="panel-body">
+					<form th:action="@{/consulter}" method="get">
+						<input type="hidden" name="compte" th:value="${compte.id}"
+							id="versChek" />
+						<div class="form-group">
+							<div class="col-md-6">
+								<label>Date Min :</label>
+							</div>
+							<div class="col-md-4">
+								<label>Date Max :</label>
+							</div>
+							<div class="col-md-2">
+								<button type="submit" class="btn btn-primary">Filtrer</button>
+							</div>
+							<br /> <br />
+							<div class="col-md-6">
+								<input type="date" name="dateMin" class="form-control"
+									placeholder="Date Min" th:value="${min}" />
+							</div>
+							<div class="col-md-6">
+								<input type="date" name="dateMax" class="form-control"
+									placeholder="Date Max" th:value="${max}" />
+							</div>
+							<br/><br/><br/>
+							<div class="col-md-3 col-md-offset-2">
+								<input type="checkbox" name="retr" id="retrCheck" value="yes"
+									th:if="${retr}" checked="checked" /> <input type="checkbox"
+									name="retr" id="retrCheck" value="yes" th:if="${notRetr}" /> <label
+									for="retrCheck">&nbsp;&nbsp;Retrait &nbsp;&nbsp; </label>
+							</div>
+							<div class="col-md-6">
+								<input type="checkbox" name="vers" id="versCheck" value="yes"
+									th:if="${vers}" checked="checked" /> <input type="checkbox"
+									name="vers" id="versCheck" value="yes" th:if="${notVers}" /><label
+									for="versCheck">&nbsp;&nbsp;Versement</label>
+							</div>
+							<div class="text-danger" th:if="${erreur3}">
+								<label th:text="${erreur3}"></label>
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class="panel-body">
+					<table class="table">
+						<tr>
+							<th>Numero</th>
+							<th>Type</th>
+							<th>Date</th>
+							<th>Montant</th>
+						</tr>
+						<tr th:each="op:${operations}">
+							<td th:text="${op.id}"></td>
+							<td th:text="${op.class.simpleName == 'Retrait' ? 'R' : 'V'}"></td>
+							<td th:text="${op.dateOperation}"></td>
+							<td th:text="${op.mantant}"></td>
+						</tr>
+					</table>
+
+					<div class="scrollmenu" id="style-2">
+						<a
+							th:class="${status.index == actuel ? 'active btn-success' : ''}"
+							th:each="page,status:${pages}"
+							th:href="@{/consulter(page=${status.index},compte=${compte.id},dateMin=${min},dateMax=${max},vers=${vers},retr=${retr})}"
+							th:text="${status.index + 1}"></a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

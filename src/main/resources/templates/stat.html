@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+	layout:decorator="template1">
+<head>
+<meta charset="utf-8" />
+<title>Banque</title>
+<script type="text/javascript" src="../static/js/Chart.min.js"
+	th:src="@{/js/Chart.min.js}"></script>
+<script type="text/javascript" th:inline="javascript">
+	window.onload = function() {
+
+		var m = [ "Janvier", "Fevrier", "Mars", "Avril", "Mai", "Juin",
+				"Juillet", "Aout", "Septembre", "Octobre", "Novembre",
+				"Decembre" ];
+		var c = [];
+		var c1 = [];
+		var c2 = [];
+
+		/*<![CDATA[*/
+		var dataPointsList = /*[[${dataPointsList}]]*/'';
+		var arrayLength = dataPointsList.length;
+		for (var i = 0; i < arrayLength; i++) {
+			var dp = dataPointsList[i];
+			c.push(dp);
+		}
+		var dataPointsVerse = /*[[${dataPointsVerse}]]*/'';
+		var arrayLength = dataPointsVerse.length;
+		for (var i = 0; i < arrayLength; i++) {
+			var dp = dataPointsVerse[i];
+			c1.push(dp);
+		}
+		var dataPointsRetrait = /*[[${dataPointsRetrait}]]*/'';
+		var arrayLength = dataPointsRetrait.length;
+		for (var i = 0; i < arrayLength; i++) {
+			var dp = dataPointsRetrait[i];
+			c2.push(dp);
+		}
+
+		var chartdata = {
+			labels : m,
+			datasets : [ {
+				label : 'Total des Operations par mois',
+				backgroundColor : 'rgba(70, 214, 152, 0.1)',
+				borderColor : 'rgba(70, 214, 152, 0.9)',
+				hoverBackgroundColor : '#60a0e0',
+				hoverBorderColor : '#3e95cd',
+				data : c
+			} ]
+		};
+
+		var chartdata1 = {
+			labels : m,
+			datasets : [ {
+				label : 'Retrait',
+				backgroundColor : 'rgba(234, 56, 56, 0.20)',
+				borderColor : 'rgba(234, 56, 56, 0.80)',
+				hoverBackgroundColor : '#60a0e0',
+				hoverBorderColor : '#3e95cd',
+				data : c1
+			}, {
+				label : 'Versement',
+				backgroundColor : 'rgba(70, 214, 152, 0.20)',
+				borderColor : 'rgba(70, 214, 152, 0.80)',
+				hoverBackgroundColor : '#60a0e0',
+				hoverBorderColor : '#3e95cd',
+				data : c2
+			} ]
+		};
+		var year = /*[[${annee}]]*/'';
+		var client = /*[[${client}]]*/'';
+		var compte = /*[[${compte}]]*/'';
+		var title1 = "Total des Operations ";
+		var title2 = "Versement Vs Retrait ";
+		
+		if(year != null || client != null || compte != null){
+			title1 += 'de ';
+			title2 += 'de ';
+		}
+		
+		if (year != 0) {
+			title1 += "l'Annee "+year+', ';
+			title2 += "l'Annee "+year+', ';
+		}
+		if (client != null) {
+			title1 += "Client "+client+', ';
+			title2 += "Client "+client+', ';
+		}
+		if (compte != '') {
+			title1 += "Compte "+compte;
+			title2 += "Compte "+compte;
+		}
+
+		var ctx = $("#mycanvas");
+		var ctx1 = $("#mycanvas1");
+
+		var lineGraph = new Chart(ctx, {
+			type : 'line',
+			data : chartdata,
+			options : {
+				title : {
+					display : true,
+					text : title1
+				},
+				spanGaps : true,
+				responsive : true,
+				tooltips : {
+					mode : 'index',
+					intersect : false,
+				},
+				hover : {
+					mode : 'nearest',
+					intersect : true
+				},
+				scales : {
+					xAxes : [ {
+						display : true,
+						scaleLabel : {
+							display : true,
+							labelString : 'Mois'
+						}
+					} ],
+					yAxes : [ {
+						display : true,
+						scaleLabel : {
+							display : true,
+							labelString : 'Tolal (Dh)'
+						}
+					} ]
+				}
+			}
+		});
+
+		var lineGraph = new Chart(ctx1, {
+			type : 'line',
+			data : chartdata1,
+			options : {
+				title : {
+					display : true,
+					text : title2
+				},
+				spanGaps : true,
+				responsive : true,
+				tooltips : {
+					mode : 'index',
+					intersect : false,
+				},
+				hover : {
+					mode : 'nearest',
+					intersect : true
+				},
+				scales : {
+					xAxes : [ {
+						display : true,
+						scaleLabel : {
+							display : true,
+							labelString : 'Mois'
+						}
+					} ],
+					yAxes : [ {
+						display : true,
+						scaleLabel : {
+							display : true,
+							labelString : 'Tolal (Dh)'
+						}
+					} ]
+				}
+			}
+		});
+		/*]]>*/
+
+	}
+
+	function retrieveCompte() {
+		var url = '/statCompte';
+
+		if ($('#client').val() != '') {
+			url = url + "?client=" + $('#client').val();
+		}
+
+		$("#compte").load(url);
+	}
+
+	function retrieveClient() {
+		var url = '/statClient';
+
+		if ($('#compte').val() != '') {
+			url = url + "?compte=" + $('#compte').val();
+		}
+
+		$("#client").load(url);
+	}
+</script>
+<style type="text/css">
+body {
+	background: url("../img/managerbg.png");
+}
+</style>
+</head>
+<body>
+	<div layout:fragment="content">
+		<form action="/statistiques" method="get">
+		<br/><br/><br/>
+			<div class="col-md-3 col-md-offset-1">
+				<select name="year" id="annee" class="form-control">
+					<option value="">-- Annee --</option>
+					<option th:each="c : ${annees}" th:value="${c}" th:text="${c}" />
+				</select>
+			</div>
+			<div class="col-md-3">
+				<select name="client" id="client" onchange="retrieveCompte()"
+					class="form-control">
+					<option value="">-- Client --</option>
+					<option th:each="c : ${clients}" th:value="${c.id}"
+						th:text="${c.id +'  '+ c.nom}" />
+				</select>
+			</div>
+			<div class="col-md-3" th:fragment="compte">
+				<select name="compte" id="compte" class="form-control">
+					<option value="">-- Compte --</option>
+					<option th:each="c : ${comptes}" th:value="${c.id}"
+						th:text="${c.id}" />
+					<option th:each="c : #{results}"
+						th:unless="${#lists.isEmpty(results)}" th:value="#{c.id}"
+						th:text="#{c.id}" />
+				</select>
+			</div>
+			<div class="col-md-2">
+				<button type="submit" class="btn btn-primary">Filtrer</button>
+			</div>
+			<br /> <label></label>
+		</form><br/>
+		<br/><br/><br/><br/>
+		<div class="col-md-5 col-md-offset-1">
+			<div id="chart-container">
+				<canvas id="mycanvas"></canvas>
+			</div>
+		</div>
+		<div class="col-md-5">
+			<div id="chart-container">
+				<canvas id="mycanvas1"></canvas>
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>
